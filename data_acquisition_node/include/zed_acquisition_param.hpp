@@ -72,15 +72,25 @@ public:
      *   @brief Getter for the compressed output state from the ROS parameter server.
      *   @return bool.
      */
- protected:
+    std::string filesDirectory() const;
+    bool  disturbance() const;
+    float iluminance() const;
+    float maxDistance() const;
+    float minDistance() const;
+    int colormap() const;
+    CameraPosition  cameraPosition() const;
+    ObjectPosition  objectPosition() const;
+    DisturbanceType disturbanceType() const;
 
+ protected:
     bool         param_disturbance_;
     std::string  param_directory_path_;                ///< Snapshot file path
 
+    float param_iluminance_;
     float param_max_distance_;
     float param_min_distance_;
-    float param_iluminance_;
 
+    int param_colormap_;
     int param_camera_position_;
     int param_object_position_;
     int param_disturbance_type_;
