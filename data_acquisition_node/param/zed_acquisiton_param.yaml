@@ -1,0 +1,9 @@
+files_directory: ~/dathomir_images
+enviroment_iluminance: 0.0
+max_distance: 10.0
+min_distance: 1.0
+disturbance: false
+camera_position: 0
+object_position: 0
+disturbance_type: 0
+
