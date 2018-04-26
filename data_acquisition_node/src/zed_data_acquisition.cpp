@@ -11,16 +11,17 @@ ZedAcquisition::ZedAcquisition()
     , right_image_()
     , left_image_()
     , raw_disparity_()
-    , frame_height_(0)
-    , frame_width_(0)
+    , params_()
     , is_saving_(false)
     , cont_(0)
     , colormap_(-1)
     , min_depth_value_(0)
     , max_depth_value_(0)
     , server_()
-
+    , files_path_("~/zed_data_acquisiton/")
 {
+    params_.readFromRosParameterServer(nh_);
+    initRosParams();
     server_.reset(new ReconfigureServer(nh_));
     server_->setCallback(boost::bind(&ZedAcquisition::reconfigureCb, this, _1, _2));
 }
@@ -104,4 +105,17 @@ void ZedAcquisition::rightRawImageCallback(const sensor_msgs::ImageConstPtr& msg
     }
 }
 
+void ZedAcquisition::initRosParams() 
+{
+    colormap_         = params_.colormap();
+    min_depth_value_  = params_.minDistance();
+    max_depth_value_  = params_.maxDistance();
+    disturbance_      = params_.disturbance();
+    camera_position_  = params_.cameraPosition();
+    object_position_  = params_.objectPosition();
+    disturbance_type_ = params_.disturbanceType();
+    luminance_        = params_.iluminance();
 }
+
+}
+

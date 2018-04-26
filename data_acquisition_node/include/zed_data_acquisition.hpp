@@ -8,6 +8,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <zed_data_acquisition/ZedDepthViewConfig.h>
 
+#include "include/zed_acquisition_param.hpp"
+
 #include "opencv2/core/core.hpp"
 #include "opencv2/core/version.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -29,6 +31,7 @@ class ZedAcquisition
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void leftRawImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void rightRawImageCallback(const sensor_msgs::ImageConstPtr& msg);
+    void initRosParams();
 
   protected:
     typedef dynamic_reconfigure::Server<Config> ReconfigureServer; 
@@ -41,18 +44,24 @@ class ZedAcquisition
 
     boost::shared_ptr<ReconfigureServer> server_; 
 
-    // bool g_do_dynamic_scaling;
+    bool   disturbance_;
     int    colormap_;
-    double min_depth_value_;
-    double max_depth_value_;
+    int    camera_position_;
+    int    object_position_;
+    int    disturbance_type_;
+    float  min_depth_value_;
+    float  max_depth_value_;
+    float  luminance_;
+
+    std::string files_path_;
 
     cv::Mat right_image_;                                 ///< cv 
     cv::Mat left_image_;                                  ///< cv 
     cv::Mat raw_disparity_;                               ///< cv 
 
+    zed::ZedAcquisitionParam params_;
+
     bool is_saving_;
-    int frame_height_;                                    ///< ROS 
-    int frame_width_;                                     ///< ROS 
     int cont_;
 };
 
