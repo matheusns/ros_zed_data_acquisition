@@ -8,7 +8,7 @@ set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -pthread -w")
 
 set(MSGS_REQUIRED std_msgs)
-set(ZED_CATKIN_DEPENDS roscpp rospy image_transport cv_bridge ${MSGS_REQUIRED})
+set(ZED_CATKIN_DEPENDS roscpp rospy image_transport cv_bridge dynamic_reconfigure ${MSGS_REQUIRED})
 
 file(GLOB_RECURSE ZED_HEADERS  "include/*.h*")
 file(GLOB_RECURSE ZED_SOURCES  "src/*.c*")
@@ -21,12 +21,15 @@ find_package(PkgConfig)
 find_package(OpenCV 3 REQUIRED)
 find_package(catkin  REQUIRED COMPONENTS cv_bridge ${ZED_CATKIN_DEPENDS} cmake_modules message_generation)
 
+generate_dynamic_reconfigure_options(cfg/depth_map.cfg)
+
 catkin_package(
     INCLUDE_DIRS   
     LIBRARIES      ${PROJECT_NAME}
     CATKIN_DEPENDS ${ZED_CATKIN_DEPENDS} 
     DEPENDS        OpenCV
 )
+
 
 include_directories(${CATKIN_DEVEL_PREFIX}/include)
 include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
@@ -42,4 +45,4 @@ set(SHARED_LIBRARIES pthread stdc++ )
 
 add_executable(zed_acqusition_node ${ZED_NODE_SOURCES} ${ZED_HEADERS})
 target_link_libraries(zed_acqusition_node ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${SHARED_LIBRARIES} ${OpenCV_LIBS})
-add_dependencies(zed_acqusition_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(zed_acqusition_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
