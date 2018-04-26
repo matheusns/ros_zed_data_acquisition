@@ -5,6 +5,8 @@
 #include <iostream>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include <dynamic_reconfigure/server.h>
+#include <zed_data_acquisition/ZedDepthViewConfig.h>
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/core/version.hpp"
@@ -19,14 +21,17 @@ class ZedAcquisition
     
     explicit ZedAcquisition();
     virtual ~ZedAcquisition();
-    bool readPrf(int &cols, int &rows, char *&data, const char *path);
-    bool readPrf(cv::Mat &frame, const char *path);
-    bool writePrf(int cols, int rows, unsigned char *&data, const char *path);
+
+    typedef zed_data_acquisition::ZedDepthViewConfig Config;
+
+    void imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src);
+    void reconfigureCb(Config &config, uint32_t level);
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void leftRawImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void rightRawImageCallback(const sensor_msgs::ImageConstPtr& msg);
 
   protected:
+    typedef dynamic_reconfigure::Server<Config> ReconfigureServer; 
 
     ros::NodeHandle nh_;                                  ///< ROS image transport object
     image_transport::ImageTransport img_transport_;       ///< ROS image transport object
@@ -34,14 +39,18 @@ class ZedAcquisition
     image_transport::Subscriber left_sub_;                ///< ROS left raw image subscriber
     image_transport::Subscriber right_sub_;               ///< ROS right raw image subscriber
 
-    cv::VideoWriter *disparity_output_video_;                       ///< ROS 
-    cv::VideoWriter *right_output_video_;                       ///< ROS 
-    cv::VideoWriter *left_output_video_;                       ///< ROS 
+    boost::shared_ptr<ReconfigureServer> server_; 
+
+    // bool g_do_dynamic_scaling;
+    int    colormap_;
+    double min_depth_value_;
+    double max_depth_value_;
+
     cv::Mat right_image_;                                 ///< cv 
     cv::Mat left_image_;                                  ///< cv 
     cv::Mat raw_disparity_;                               ///< cv 
 
-    bool is_saving_;                                      ///< ROS 
+    bool is_saving_;
     int frame_height_;                                    ///< ROS 
     int frame_width_;                                     ///< ROS 
     int cont_;
