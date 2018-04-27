@@ -7,11 +7,13 @@
 #include <cv_bridge/cv_bridge.h>
 
 #include "include/zed_acquisition_param.hpp"
+#include <include/zed_file_manager.hpp>
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/core/version.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
+
 
 namespace zed
 {

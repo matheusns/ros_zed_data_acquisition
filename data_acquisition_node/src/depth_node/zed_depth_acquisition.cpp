@@ -13,6 +13,7 @@ ZedDepthAcquisition::ZedDepthAcquisition()
     , max_depth_value_(0)
     , server_()
     , files_path_("~/zed_data_acquisiton/")
+    , file_manager_()
 {
     params_.readFromRosParameterServer(nh_);
     initRosParams();
@@ -42,9 +43,8 @@ void ZedDepthAcquisition::imageNormalize(const sensor_msgs::ImageConstPtr& msg, 
         if (min_depth_value_ == max_depth_value_) 
         {
             options.min_image_value = 0;
-            options.max_image_value = 20;
-            // if (msg->encoding == "32FC1") options.max_image_value = 20;               // Probably 10 meters
-            // else if (msg->encoding == "16UC1")  options.max_image_value = 10 * 1000;  // 10 * 1000 [mm]
+            if (msg->encoding == "32FC1") options.max_image_value = 20;               // Probably 10 meters
+            else if (msg->encoding == "16UC1")  options.max_image_value = 10 * 1000;  // 10 * 1000 [mm]
         } 
         else 
         {
@@ -65,14 +65,9 @@ void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& m
 {
     std::ostringstream image_name;
     cv::Mat depth;
-    imageNormalize(msg, depth);    
-    // cv::namedWindow("ROS Frames", CV_WINDOW_NORMAL );
-    // cv::imshow("ROS Frames", depth);
-    // std::cout << depth.channels() << std::endl;
-    // cv::resize(raw_disparity_, raw_disparity_, cv::Size(640,360));
+    imageNormalize(msg, depth);
     image_name << "/home/matheus/32bits/depth/depth_" << msg->header.stamp << ".png"; 
     cv::imwrite(image_name.str(), depth);
-    // cv::waitKey(1);
 }
 
 void ZedDepthAcquisition::initRosParams() 

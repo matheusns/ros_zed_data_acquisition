@@ -9,6 +9,7 @@
 #include <zed_data_acquisition/ZedDepthViewConfig.h>
 
 #include "include/zed_acquisition_param.hpp"
+#include <include/zed_file_manager.hpp>
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/core/version.hpp"
@@ -48,6 +49,8 @@ class ZedDepthAcquisition
     float  min_depth_value_;
     float  max_depth_value_;
     float  luminance_;
+
+    ZedFileManager file_manager_;
 
     std::string files_path_;
 
