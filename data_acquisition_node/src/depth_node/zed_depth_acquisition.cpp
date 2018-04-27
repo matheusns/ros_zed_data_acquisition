@@ -1,19 +1,13 @@
-#include "include/zed_data_acquisition.hpp"
+#include "include/zed_depth_acquisition.hpp"
 
 namespace zed
 {
-ZedAcquisition::ZedAcquisition()
+ZedDepthAcquisition::ZedDepthAcquisition()
     : nh_("~")
     , img_transport_(nh_)
-    , depth_sub_(img_transport_.subscribe("/zed/depth/depth_registered", 1,&ZedAcquisition::depthImageCallback, this))
-    , left_sub_(img_transport_.subscribe("/zed/left/image_raw_color", 1,&ZedAcquisition::leftRawImageCallback, this))
-    , right_sub_(img_transport_.subscribe("/zed/right/image_raw_color", 1,&ZedAcquisition::rightRawImageCallback, this))
-    , right_image_()
-    , left_image_()
+    , depth_sub_(img_transport_.subscribe("/zed/depth/depth_registered", 1,&ZedDepthAcquisition::depthImageCallback, this))
     , raw_disparity_()
     , params_()
-    , is_saving_(false)
-    , cont_(0)
     , colormap_(-1)
     , min_depth_value_(0)
     , max_depth_value_(0)
@@ -23,12 +17,12 @@ ZedAcquisition::ZedAcquisition()
     params_.readFromRosParameterServer(nh_);
     initRosParams();
     server_.reset(new ReconfigureServer(nh_));
-    server_->setCallback(boost::bind(&ZedAcquisition::reconfigureCb, this, _1, _2));
+    server_->setCallback(boost::bind(&ZedDepthAcquisition::reconfigureCb, this, _1, _2));
 }
-ZedAcquisition::~ZedAcquisition()
+ZedDepthAcquisition::~ZedDepthAcquisition()
 {
 }
-void ZedAcquisition::reconfigureCb(Config &config, uint32_t level)
+void ZedDepthAcquisition::reconfigureCb(Config &config, uint32_t level)
 {
 //   boost::mutex::scoped_lock lock(g_image_mutex);
   colormap_ = config.colormap;
@@ -36,7 +30,7 @@ void ZedAcquisition::reconfigureCb(Config &config, uint32_t level)
   max_depth_value_ = config.max_image_value;
 }
 
-void ZedAcquisition::imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src)
+void ZedDepthAcquisition::imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src)
 {
     cv_bridge::CvImageConstPtr cv_ptr;
     cv::Mat dst;
@@ -67,45 +61,21 @@ void ZedAcquisition::imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::M
     if (!dst.empty()) src = dst;
 }
 
-void ZedAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
+void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-    cont_++;
     std::ostringstream image_name;
-
     cv::Mat depth;
     imageNormalize(msg, depth);    
-    cv::namedWindow("ROS Frames", CV_WINDOW_NORMAL );
-    cv::imshow("ROS Frames", depth);
-    std::cout << depth.channels() << std::endl;
+    // cv::namedWindow("ROS Frames", CV_WINDOW_NORMAL );
+    // cv::imshow("ROS Frames", depth);
+    // std::cout << depth.channels() << std::endl;
     // cv::resize(raw_disparity_, raw_disparity_, cv::Size(640,360));
-    image_name << "/home/matheus/32bits/" << cont_ << ".png"; 
+    image_name << "/home/matheus/32bits/depth/depth_" << msg->header.stamp << ".png"; 
     cv::imwrite(image_name.str(), depth);
-    cv::waitKey(1);
+    // cv::waitKey(1);
 }
 
-void ZedAcquisition::leftRawImageCallback(const sensor_msgs::ImageConstPtr& msg)
-{
-    cv::Mat left_image_;
-    left_image_ = cv_bridge::toCvShare(msg, "bgr8")->image;
-    if (is_saving_)
-    {
-        int codec = CV_FOURCC('M', 'J', 'P', 'G');
-        is_saving_ = false;
-    }
-}
-
-void ZedAcquisition::rightRawImageCallback(const sensor_msgs::ImageConstPtr& msg)
-{
-    
-    right_image_ = cv_bridge::toCvShare(msg, "bgr8")->image;
-    if (is_saving_)
-    {
-        int codec = CV_FOURCC('M', 'J', 'P', 'G');
-        is_saving_ = false;
-    }
-}
-
-void ZedAcquisition::initRosParams() 
+void ZedDepthAcquisition::initRosParams() 
 {
     colormap_         = params_.colormap();
     min_depth_value_  = params_.minDistance();
@@ -115,6 +85,7 @@ void ZedAcquisition::initRosParams()
     object_position_  = params_.objectPosition();
     disturbance_type_ = params_.disturbanceType();
     luminance_        = params_.iluminance();
+    files_path_ = params_.filesDirectory(); 
 }
 
 }

@@ -10,11 +10,29 @@ set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -pthread -w")
 set(MSGS_REQUIRED std_msgs)
 set(ZED_CATKIN_DEPENDS roscpp rospy image_transport cv_bridge dynamic_reconfigure ${MSGS_REQUIRED})
 
-file(GLOB_RECURSE ZED_HEADERS  "include/*.h*")
-file(GLOB_RECURSE ZED_SOURCES  "src/*.c*")
-file(GLOB_RECURSE ZED_MAIN     "src/main.cpp")
+file(GLOB_RECURSE ZED_PARAM_INCLUDE  "include/zed_acquisition_param.hpp")
+file(GLOB_RECURSE ZED_PARAM_SOURCE   "src/zed_acquisition_param.cpp")
 
-set(ZED_NODE_SOURCES ${ZED_MAIN} ${ZED_SOURCES} )
+file(GLOB_RECURSE ZED_DEPTH_INCLUDE  "include/zed_depth_acquisition.hpp")
+file(GLOB_RECURSE ZED_DEPTH_SOURCE   "src/depth_node/zed_depth_acquisition.cpp")
+file(GLOB_RECURSE ZED_DEPTH_MAIN     "src/depth_node/main.cpp")
+
+file(GLOB_RECURSE ZED_LEFT_INCLUDE  "include/zed_left_acquisition.hpp")
+file(GLOB_RECURSE ZED_LEFT_SOURCE   "src/left_node/zed_depth_acquisition.cpp")
+file(GLOB_RECURSE ZED_LEFT_MAIN     "src/left_node/main.cpp")
+
+file(GLOB_RECURSE ZED_RIGHT_INCLUDE  "include/zed_right_acquisition.hpp")
+file(GLOB_RECURSE ZED_RIGHT_SOURCE   "src/right_node/zed_right_acquisition.cpp")
+file(GLOB_RECURSE ZED_RIGHT_MAIN     "src/right_node/main.cpp")
+
+set(ZED_DEPTH_NODE_SOURCES ${ZED_DEPTH_MAIN} ${ZED_DEPTH_SOURCE} ${ZED_PARAM_SOURCE})
+set(ZED_DEPTH_NODE_HEADERS ${ZED_PARAM_INCLUDE} ${ZED_DEPTH_INCLUDE})
+
+set(ZED_LEFT_NODE_SOURCES ${ZED_LEFT_MAIN} ${ZED_LEFT_SOURCE} ${ZED_PARAM_SOURCE})
+set(ZED_LEFT_NODE_HEADERS ${ZED_PARAM_INCLUDE} ${ZED_LEFT_INCLUDE})
+
+set(ZED_RIGHT_NODE_SOURCES ${ZED_RIGHT_MAIN} ${ZED_RIGHT_SOURCE} ${ZED_PARAM_SOURCE})
+set(ZED_RIGHT_NODE_HEADERS ${ZED_PARAM_INCLUDE} ${ZED_RIGHT_INCLUDE})
 
 find_package(PkgConfig)
 
@@ -43,6 +61,12 @@ link_directories(
 
 set(SHARED_LIBRARIES pthread stdc++ )
 
-add_executable(zed_acqusition_node ${ZED_NODE_SOURCES} ${ZED_HEADERS})
-target_link_libraries(zed_acqusition_node ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${SHARED_LIBRARIES} ${OpenCV_LIBS})
-add_dependencies(zed_acqusition_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+add_executable(zed_depth_acqusition_node ${ZED_DEPTH_NODE_SOURCES} ${ZED_DEPTH_NODE_HEADERS})
+target_link_libraries(zed_depth_acqusition_node ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${SHARED_LIBRARIES} ${OpenCV_LIBS})
+add_dependencies(zed_depth_acqusition_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+
+add_executable(zed_left_acqusition_node ${ZED_RIGHT_NODE_SOURCES} ${ZED_RIGHT_NODE_HEADERS})
+target_link_libraries(zed_left_acqusition_node ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${SHARED_LIBRARIES} ${OpenCV_LIBS})
+
+add_executable(zed_right_acqusition_node ${ZED_DEPTH_NODE_SOURCES} ${ZED_DEPTH_NODE_HEADERS})
+target_link_libraries(zed_right_acqusition_node ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${SHARED_LIBRARIES} ${OpenCV_LIBS})

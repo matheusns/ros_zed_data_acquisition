@@ -1,5 +1,5 @@
-#ifndef ZED_DATA_ACQUISITION_INCLUDE_ZED_DATA_ACQUISITION_HPP
-#define ZED_DATA_ACQUISITION_INCLUDE_ZED_DATA_ACQUISITION_HPP
+#ifndef ZED_DATA_ACQUISITION_INCLUDE_ZED_DEPTH_ACQUISITION_HPP
+#define ZED_DATA_ACQUISITION_INCLUDE_ZED_DEPTH_ACQUISITION_HPP
 
 #include <ros/ros.h>
 #include <iostream>
@@ -17,20 +17,18 @@
 
 namespace zed
 {
-class ZedAcquisition 
+class ZedDepthAcquisition 
 {
   public:    
     
-    explicit ZedAcquisition();
-    virtual ~ZedAcquisition();
+    explicit ZedDepthAcquisition();
+    virtual ~ZedDepthAcquisition();
 
     typedef zed_data_acquisition::ZedDepthViewConfig Config;
 
     void imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src);
     void reconfigureCb(Config &config, uint32_t level);
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
-    void leftRawImageCallback(const sensor_msgs::ImageConstPtr& msg);
-    void rightRawImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void initRosParams();
 
   protected:
@@ -39,8 +37,6 @@ class ZedAcquisition
     ros::NodeHandle nh_;                                  ///< ROS image transport object
     image_transport::ImageTransport img_transport_;       ///< ROS image transport object
     image_transport::Subscriber depth_sub_;               ///< ROS depth image subscriber
-    image_transport::Subscriber left_sub_;                ///< ROS left raw image subscriber
-    image_transport::Subscriber right_sub_;               ///< ROS right raw image subscriber
 
     boost::shared_ptr<ReconfigureServer> server_; 
 
@@ -55,14 +51,9 @@ class ZedAcquisition
 
     std::string files_path_;
 
-    cv::Mat right_image_;                                 ///< cv 
-    cv::Mat left_image_;                                  ///< cv 
     cv::Mat raw_disparity_;                               ///< cv 
 
     zed::ZedAcquisitionParam params_;
-
-    bool is_saving_;
-    int cont_;
 };
 
 } // zed namespace
