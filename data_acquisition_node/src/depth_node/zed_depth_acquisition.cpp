@@ -61,6 +61,12 @@ void ZedDepthAcquisition::imageNormalize(const sensor_msgs::ImageConstPtr& msg, 
     if (!dst.empty()) src = dst;
 }
 
+void ZedDepthAcquisition::depthNormalize()
+{
+    
+}
+
+
 void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     std::ostringstream image_name;

@@ -28,6 +28,7 @@ class ZedDepthAcquisition
     typedef zed_data_acquisition::ZedDepthViewConfig Config;
 
     void imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src);
+    void ZedDepthAcquisition::depthNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src)
     void reconfigureCb(Config &config, uint32_t level);
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void initRosParams();
