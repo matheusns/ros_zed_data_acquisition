@@ -64,11 +64,54 @@ void ZedDepthAcquisition::imageNormalize(const sensor_msgs::ImageConstPtr& msg, 
 void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     std::ostringstream image_name;
-    cv::Mat depth;
+    cv::Mat depth, raw;
+    if (msg->encoding == "32FC1") raw = cv_bridge::toCvShare(msg, "32FC1")->image;
+    if (msg->encoding == "16UC1") raw = cv_bridge::toCvShare(msg, "16UC1")->image;
+
     imageNormalize(msg, depth);
+    printPixels(msg, depth, raw);
+
+    cv::namedWindow("Depth", CV_WINDOW_NORMAL);
     image_name << "/home/matheus/32bits/depth/depth_" << msg->header.stamp << ".png"; 
+    cv::imshow("Depth", depth);
+    cv::waitKey(1);
+
     cv::imwrite(image_name.str(), depth);
 }
+
+void ZedDepthAcquisition::printPixels(const sensor_msgs::ImageConstPtr& msg, const cv::Mat& depth, const cv::Mat& raw)
+{
+    if (msg->encoding == "32FC1")
+    {
+        std::cout << "First Object = "  << raw.at<float>(347, 733) << std::endl;
+        std::cout << "Second Object = " << raw.at<float>(236, 723) << std::endl << std::endl << std::endl;
+        
+        std::cout << "First Normalized Object = "  << static_cast<int>(depth.at<cv::Vec3b>(347, 733)[0]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(347, 733)[1]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(347, 733)[2]) << std::endl;
+
+        std::cout << "Second Normalized Object = "  << static_cast<int>(depth.at<cv::Vec3b>(236, 723)[0]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(236, 723)[1]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(236, 723)[2])  << std::endl;
+    }
+
+    if (msg->encoding == "16UC1")
+    {
+        int first = static_cast<int>(raw.at<int>(350, 748));
+        int second = static_cast<int>(raw.at<int>(258, 721));
+
+        std::cout << "First Object = "  << first/(int)1000 << std::endl;
+        std::cout << "Second Object = " << second/(int)1000 << std::endl << std::endl << std::endl;
+        
+        std::cout << "First Normalized Object = "  << static_cast<int>(depth.at<cv::Vec3b>(350, 748)[0]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(350, 748)[1]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(350, 748)[2]) << std::endl;
+
+        std::cout << "Second Normalized Object = "  << static_cast<int>(depth.at<cv::Vec3b>(258, 721)[0]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(258, 721)[1]) 
+        + static_cast<int>(depth.at<cv::Vec3b>(258, 721)[2])  << std::endl;
+    }
+} 
 
 void ZedDepthAcquisition::initRosParams() 
 {

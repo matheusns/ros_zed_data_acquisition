@@ -31,6 +31,7 @@ class ZedDepthAcquisition
     void reconfigureCb(Config &config, uint32_t level);
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void initRosParams();
+    void printPixels(const sensor_msgs::ImageConstPtr& msg, const cv::Mat& depth, const cv::Mat& raw); 
 
   protected:
     typedef dynamic_reconfigure::Server<Config> ReconfigureServer; 
