@@ -12,7 +12,7 @@ ZedDepthAcquisition::ZedDepthAcquisition()
     , min_depth_value_(1)
     , max_depth_value_(0)
     , server_()
-    , files_path_("~/zed_data_acquisiton/")
+    , files_path_("~/zed_data_acquisiton")
     , file_manager_()
 {
     params_.readFromRosParameterServer(nh_);
@@ -109,7 +109,6 @@ void ZedDepthAcquisition::distanceThreshold(const sensor_msgs::ImageConstPtr& ms
     }
 }
 
-
 void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     std::ostringstream image_name;
@@ -123,12 +122,30 @@ void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& m
     {
         printPixels(msg, depth, raw);
         cv::namedWindow("Depth", CV_WINDOW_NORMAL);
-        image_name << "/home/matheus/32bits/depth/depth_" << msg->header.stamp << ".png"; 
+        image_name << "depth_" << msg->header.stamp;
         cv::imshow("Depth", depth);
         cv::waitKey(1);
-
-        cv::imwrite(image_name.str(), depth);
+        saveImage(depth, image_name.str());
     }
+}
+
+bool ZedDepthAcquisition::saveImage(cv::Mat& src, const std::string file_name)
+{
+    std::ostringstream path;
+
+    if (files_path_[0] == '~')
+    {
+        files_path_ = file_manager_.normalizeUserPath(files_path_);
+    }
+
+    path << files_path_ << "/depth/";
+    
+    if ( !file_manager_.existsDir(path.str()) )
+    {
+        file_manager_.createDir(path.str());
+    }
+    path << file_name << ".png";
+    cv::imwrite(path.str(), src);
 }
 
 void ZedDepthAcquisition::printPixels(const sensor_msgs::ImageConstPtr& msg, const cv::Mat& depth, const cv::Mat& raw)

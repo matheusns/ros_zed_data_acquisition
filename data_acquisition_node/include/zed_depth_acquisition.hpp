@@ -24,20 +24,18 @@ namespace zed
 class ZedDepthAcquisition 
 {
   public:    
-    
     explicit ZedDepthAcquisition();
     virtual ~ZedDepthAcquisition();
 
     typedef zed_data_acquisition::ZedDepthViewConfig Config;
 
-    void imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src);
+    void reconfigureCb(Config &config, uint32_t level);
     cv_bridge::CvImageConstPtr colorMap(const cv_bridge::CvImageConstPtr& source, const int color_map);
     void distanceThreshold(const sensor_msgs::ImageConstPtr& msg, cv::Mat& dst);
-    // void distanceThreshold(cv::Mat& src, cv::Mat& dst);
-    void reconfigureCb(Config &config, uint32_t level);
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
-    void initRosParams();
+    bool saveImage(cv::Mat& src, const std::string file_path);
     void printPixels(const sensor_msgs::ImageConstPtr& msg, const cv::Mat& depth, const cv::Mat& raw); 
+    void initRosParams();
 
   protected:
     typedef dynamic_reconfigure::Server<Config> ReconfigureServer; 
