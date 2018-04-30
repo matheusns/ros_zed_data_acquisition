@@ -8,7 +8,7 @@ ZedRightAcquisition::ZedRightAcquisition()
     , right_sub_(img_transport_.subscribe("/zed/right/image_raw_color", 1,&ZedRightAcquisition::rightRawImageCallback, this))
     , right_img_()
     , params_()
-    , files_path_("~/zed_data_acquisiton/")
+    , files_path_("~/zed_data_acquisiton")
 {
     params_.readFromRosParameterServer(nh_);
     initRosParams();
