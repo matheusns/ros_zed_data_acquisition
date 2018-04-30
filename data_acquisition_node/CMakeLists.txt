@@ -11,7 +11,7 @@ SET(Boost_USE_MULTITHREADED ON)
 
 
 set(MSGS_REQUIRED std_msgs)
-set(ZED_CATKIN_DEPENDS roscpp rospy image_transport cv_bridge dynamic_reconfigure ${MSGS_REQUIRED})
+set(ZED_CATKIN_DEPENDS roscpp rospy image_transport sensor_msgs cv_bridge dynamic_reconfigure ${MSGS_REQUIRED})
 
 file(GLOB_RECURSE ZED_PARAM_INCLUDE  "include/zed_acquisition_param.hpp")
 file(GLOB_RECURSE ZED_PARAM_SOURCE   "src/zed_acquisition_param.cpp")

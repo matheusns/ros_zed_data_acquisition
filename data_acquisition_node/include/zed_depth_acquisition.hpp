@@ -7,6 +7,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/server.h>
 #include <zed_data_acquisition/ZedDepthViewConfig.h>
+#include <sensor_msgs/image_encodings.h>
 
 #include "include/zed_acquisition_param.hpp"
 #include <include/zed_file_manager.hpp>
@@ -15,6 +16,8 @@
 #include "opencv2/core/version.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
+
+namespace enc = sensor_msgs::image_encodings;
 
 namespace zed
 {
@@ -28,6 +31,9 @@ class ZedDepthAcquisition
     typedef zed_data_acquisition::ZedDepthViewConfig Config;
 
     void imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src);
+    cv_bridge::CvImageConstPtr colorMap(const cv_bridge::CvImageConstPtr& source, const int color_map);
+    void distanceThreshold(const sensor_msgs::ImageConstPtr& msg, cv::Mat& dst);
+    // void distanceThreshold(cv::Mat& src, cv::Mat& dst);
     void reconfigureCb(Config &config, uint32_t level);
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
     void initRosParams();

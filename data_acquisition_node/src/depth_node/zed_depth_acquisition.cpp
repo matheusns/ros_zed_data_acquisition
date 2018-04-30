@@ -9,7 +9,7 @@ ZedDepthAcquisition::ZedDepthAcquisition()
     , raw_disparity_()
     , params_()
     , colormap_(-1)
-    , min_depth_value_(0)
+    , min_depth_value_(1)
     , max_depth_value_(0)
     , server_()
     , files_path_("~/zed_data_acquisiton/")
@@ -31,35 +31,84 @@ void ZedDepthAcquisition::reconfigureCb(Config &config, uint32_t level)
   max_depth_value_ = config.max_image_value;
 }
 
-void ZedDepthAcquisition::imageNormalize(const sensor_msgs::ImageConstPtr& msg, cv::Mat& src)
+cv_bridge::CvImageConstPtr ZedDepthAcquisition::colorMap(const cv_bridge::CvImageConstPtr& source, const int color_map)
 {
-    cv_bridge::CvImageConstPtr cv_ptr;
-    cv::Mat dst;
-    try 
-    {
-        cv_bridge::CvtColorForDisplayOptions options;
-        options.colormap = colormap_;
+    cv_bridge::CvImagePtr result(new cv_bridge::CvImage());
+    result->header = source->header;
+    std::string encoding = enc::BGR8;
 
-        if (min_depth_value_ == max_depth_value_) 
-        {
-            options.min_image_value = 0;
-            if (msg->encoding == "32FC1") options.max_image_value = 20;               // Probably 10 meters
-            else if (msg->encoding == "16UC1")  options.max_image_value = 10 * 1000;  // 10 * 1000 [mm]
-        } 
-        else 
-        {
-            options.min_image_value = min_depth_value_;
-            options.max_image_value = max_depth_value_;
-        }
-        cv_ptr = cv_bridge::cvtColorForDisplay(cv_bridge::toCvShare(msg), "", options);
-        dst = cv_ptr->image;
-    } 
-    catch (cv_bridge::Exception& e) 
+    if (min_depth_value_ != max_depth_value_)
     {
-        ROS_ERROR_THROTTLE(30, "Unable to convert '%s' image for display: '%s'", msg->encoding.c_str(), e.what());
+        if (color_map == -1) 
+        {
+            result->encoding = enc::MONO8;
+            cv::Mat(source->image-min_depth_value_).convertTo(result->image, CV_8UC1, 255.0/(max_depth_value_ - min_depth_value_));
+            // cv::normalize(source->image, result->image, 0, 255, NORM_MINMAX, CV_8UC1);
+        }
+        else
+        {
+            result->encoding = enc::BGR8;
+            cv::Mat(source->image-min_depth_value_).convertTo(result->image, CV_8UC3, 255.0/(max_depth_value_ - min_depth_value_));
+            // cv::normalize(source->image, result->image, 0, 255, NORM_MINMAX, CV_8UC3);
+            cv::applyColorMap(result->image, result->image, color_map); 
+        }
+        return cv_bridge::cvtColor(result, encoding);
     }
-    if (!dst.empty()) src = dst;
 }
+
+void ZedDepthAcquisition::distanceThreshold(const sensor_msgs::ImageConstPtr& msg, cv::Mat& dst)
+{
+    cv_bridge::CvImageConstPtr source = cv_bridge::toCvShare(msg);
+
+    cv_bridge::CvImagePtr result(new cv_bridge::CvImage());
+    result->header = source->header;
+    result->encoding = source->encoding;
+    result->image = cv::Mat(source->image.rows, source->image.cols, CV_32FC1);
+
+    if (min_depth_value_ != 0 || max_depth_value_ != 0)
+    {
+        for (size_t j = 0; j < source->image.rows; ++j) 
+        {
+            for (size_t i = 0; i < source->image.cols; ++i) 
+            {
+                float float_value = source->image.at<float>(j, i);
+
+                if (float_value <= min_depth_value_)
+                {
+                    result->image.at<float>(j, i) = 0.0f;
+                }
+                else if (float_value >= max_depth_value_)
+                {
+                    result->image.at<float>(j, i) = 0.0f;
+                }
+                else
+                {
+                    result->image.at<float>(j, i) = float_value;
+                }
+                /* if (source->encoding == enc::TYPE_32FC1) 
+                {
+                    if (std::isnan(float_value))    
+                    {
+                        result->image.at<cv::Vec3b>(j, i) = cv::Vec3b(0, 0, 0);
+                    }
+                } */
+            }
+        }
+        cv::Mat image_result  = colorMap(result, colormap_)->image;
+        if (image_result.empty())
+        {
+            std::cout << "Empty frame" << std::endl;
+        }
+
+        if (!image_result.empty())
+        {
+            std::cout << "Not Empty frame" << std::endl;
+            dst = image_result;
+        }
+        return;
+    }
+}
+
 
 void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
@@ -68,15 +117,18 @@ void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& m
     if (msg->encoding == "32FC1") raw = cv_bridge::toCvShare(msg, "32FC1")->image;
     if (msg->encoding == "16UC1") raw = cv_bridge::toCvShare(msg, "16UC1")->image;
 
-    imageNormalize(msg, depth);
-    printPixels(msg, depth, raw);
+    distanceThreshold(msg,depth);
 
-    cv::namedWindow("Depth", CV_WINDOW_NORMAL);
-    image_name << "/home/matheus/32bits/depth/depth_" << msg->header.stamp << ".png"; 
-    cv::imshow("Depth", depth);
-    cv::waitKey(1);
+    if (!depth.empty())
+    {
+        printPixels(msg, depth, raw);
+        cv::namedWindow("Depth", CV_WINDOW_NORMAL);
+        image_name << "/home/matheus/32bits/depth/depth_" << msg->header.stamp << ".png"; 
+        cv::imshow("Depth", depth);
+        cv::waitKey(1);
 
-    cv::imwrite(image_name.str(), depth);
+        cv::imwrite(image_name.str(), depth);
+    }
 }
 
 void ZedDepthAcquisition::printPixels(const sensor_msgs::ImageConstPtr& msg, const cv::Mat& depth, const cv::Mat& raw)
