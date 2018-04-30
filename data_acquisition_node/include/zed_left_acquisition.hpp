@@ -25,6 +25,7 @@ class ZedLeftAcquisition
     virtual ~ZedLeftAcquisition();
 
     void leftRawImageCallback(const sensor_msgs::ImageConstPtr& msg);
+    bool saveImage(cv::Mat& src, const std::string file_name);
     void initRosParams();
 
   protected:
@@ -36,6 +37,7 @@ class ZedLeftAcquisition
 
     std::string files_path_;
     cv::Mat left_img_;                                  ///< cv 
+    zed::ZedFileManager file_manager_;
     zed::ZedAcquisitionParam params_;
 };
 

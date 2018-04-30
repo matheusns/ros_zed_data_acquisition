@@ -16,14 +16,34 @@ ZedRightAcquisition::ZedRightAcquisition()
 ZedRightAcquisition::~ZedRightAcquisition()
 {
 }
+
+
 void ZedRightAcquisition::rightRawImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     std::ostringstream image_name;
     right_img_ = cv_bridge::toCvShare(msg, "bgr8")->image;
-    image_name << "/home/matheus/32bits/right/right_" << msg->header.stamp << ".png"; 
-    cv::imwrite(image_name.str(), right_img_);
+    image_name << "right_" << msg->header.stamp;
+    saveImage(right_img_, image_name.str());
 }
 
+bool ZedRightAcquisition::saveImage(cv::Mat& src, const std::string file_name)
+{
+    std::ostringstream path;
+
+    if (files_path_[0] == '~')
+    {
+        files_path_ = file_manager_.normalizeUserPath(files_path_);
+    }
+
+    path << files_path_ << "/right/";
+    
+    if ( !file_manager_.existsDir(path.str()) )
+    {
+        file_manager_.createDir(path.str());
+    }
+    path << file_name << ".png";
+    cv::imwrite(path.str(), src);
+}
 void ZedRightAcquisition::initRosParams() 
 {
     files_path_ = params_.filesDirectory(); 
