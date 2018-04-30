@@ -1,0 +1,24 @@
+<launch>
+    <!-- <env name="ROSCONSOLE_CONFIG_FILE" value="$(find dathomir_basler)/cfg/rosconsole.conf"/> -->
+
+    <arg name="respawn" default="false" />
+
+    <!-- Loads the params into YAML file -->
+    <arg name="parameters" default="$(find zed_data_acquisition)/param/zed_acquisiton_param.yaml" />
+
+    <!-- Camera top node configuration -->
+    <node name="zed_left_acqusition_node" pkg="zed_data_acquisition" type="zed_left_acqusition_node" output="screen"
+          respawn="$(arg respawn)">
+        <rosparam command="load" file="$(arg parameters)" />
+    </node>
+
+    <node name="zed_depth_acqusition_node" pkg="zed_data_acquisition" type="zed_depth_acqusition_node" output="screen"
+          respawn="$(arg respawn)">
+        <rosparam command="load" file="$(arg parameters)" />
+    </node>
+
+    <node name="zed_right_acqusition_node" pkg="zed_data_acquisition" type="zed_right_acqusition_node" output="screen"
+          respawn="$(arg respawn)">
+        <rosparam command="load" file="$(arg parameters)" />
+    </node>
+</launch>
