@@ -85,24 +85,21 @@ void ZedDepthAcquisition::distanceThreshold(const sensor_msgs::ImageConstPtr& ms
                 {
                     result->image.at<float>(j, i) = float_value;
                 }
-                /* if (source->encoding == enc::TYPE_32FC1) 
+                if (std::isnan(float_value))    
                 {
-                    if (std::isnan(float_value))    
-                    {
-                        result->image.at<cv::Vec3b>(j, i) = cv::Vec3b(0, 0, 0);
-                    }
-                } */
+                    result->image.at<float>(j, i) = 0;
+                }
+                
             }
         }
         cv::Mat image_result  = colorMap(result, colormap_)->image;
         if (image_result.empty())
         {
-            std::cout << "Empty frame" << std::endl;
+            ROS_INFO_STREAM("Frame Empty. Frame's time stamp = " << msg->header.stamp);
         }
 
         if (!image_result.empty())
         {
-            std::cout << "Not Empty frame" << std::endl;
             dst = image_result;
         }
         return;
