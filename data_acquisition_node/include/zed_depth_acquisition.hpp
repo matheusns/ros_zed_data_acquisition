@@ -30,10 +30,10 @@ class ZedDepthAcquisition
     typedef zed_data_acquisition::ZedDepthViewConfig Config;
 
     void reconfigureCb(Config &config, uint32_t level);
-    cv_bridge::CvImageConstPtr colorMap(const cv_bridge::CvImageConstPtr& source, const int color_map);
-    void distanceThreshold(const sensor_msgs::ImageConstPtr& msg, cv::Mat& dst);
+    cv_bridge::CvImageConstPtr colorMap(const cv_bridge::CvImageConstPtr& source, const int color_map, bool normalized = false);
+    void distanceThreshold(const sensor_msgs::ImageConstPtr& msg, cv::Mat& dst, cv::Mat& normalized);
     void depthImageCallback(const sensor_msgs::ImageConstPtr& msg);
-    bool saveImage(cv::Mat& src, const std::string file_path);
+    bool saveImage(cv::Mat& depth, cv::Mat& normalized, const std::string file_path);
     void printPixels(const sensor_msgs::ImageConstPtr& msg, const cv::Mat& depth, const cv::Mat& raw); 
     void initRosParams();
 

@@ -31,13 +31,13 @@ void ZedDepthAcquisition::reconfigureCb(Config &config, uint32_t level)
   max_depth_value_ = config.max_image_value;
 }
 
-cv_bridge::CvImageConstPtr ZedDepthAcquisition::colorMap(const cv_bridge::CvImageConstPtr& source, const int color_map)
+cv_bridge::CvImageConstPtr ZedDepthAcquisition::colorMap(const cv_bridge::CvImageConstPtr& source, const int color_map, bool normalized)
 {
     cv_bridge::CvImagePtr result(new cv_bridge::CvImage());
     result->header = source->header;
     std::string encoding = enc::BGR8;
 
-    if (min_depth_value_ != max_depth_value_)
+    if (min_depth_value_ != max_depth_value_ && !normalized)
     {
         if (color_map == -1) 
         {
@@ -54,9 +54,24 @@ cv_bridge::CvImageConstPtr ZedDepthAcquisition::colorMap(const cv_bridge::CvImag
         }
         return cv_bridge::cvtColor(result, encoding);
     }
+    else if (min_depth_value_ != max_depth_value_ && normalized)
+    {
+        if (color_map == -1) 
+        {
+            result->encoding = enc::MONO8;
+            cv::Mat(source->image-min_depth_value_).convertTo(result->image, CV_8UC1, 255.0/(10));
+        }
+        else
+        {
+            result->encoding = enc::BGR8;
+            cv::Mat(source->image-min_depth_value_).convertTo(result->image, CV_8UC3, 255.0/(10));
+            cv::applyColorMap(result->image, result->image, color_map); 
+        }
+        return cv_bridge::cvtColor(result, encoding);
+    }
 }
 
-void ZedDepthAcquisition::distanceThreshold(const sensor_msgs::ImageConstPtr& msg, cv::Mat& dst)
+void ZedDepthAcquisition::distanceThreshold(const sensor_msgs::ImageConstPtr& msg, cv::Mat& dst, cv::Mat& normalized)
 {
     cv_bridge::CvImageConstPtr source = cv_bridge::toCvShare(msg);
 
@@ -64,6 +79,13 @@ void ZedDepthAcquisition::distanceThreshold(const sensor_msgs::ImageConstPtr& ms
     result->header = source->header;
     result->encoding = source->encoding;
     result->image = cv::Mat(source->image.rows, source->image.cols, CV_32FC1);
+    
+    cv_bridge::CvImagePtr normalized_result(new cv_bridge::CvImage());
+    normalized_result->header = source->header;
+    normalized_result->encoding = source->encoding;
+    normalized_result->image = source->image;
+
+    normalized = colorMap(normalized_result, colormap_, true)->image;
 
     if (min_depth_value_ != 0 || max_depth_value_ != 0)
     {
@@ -109,40 +131,49 @@ void ZedDepthAcquisition::distanceThreshold(const sensor_msgs::ImageConstPtr& ms
 void ZedDepthAcquisition::depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     std::ostringstream image_name;
-    cv::Mat depth, raw;
+    cv::Mat depth, raw, normalized;
     if (msg->encoding == "32FC1") raw = cv_bridge::toCvShare(msg, "32FC1")->image;
     if (msg->encoding == "16UC1") raw = cv_bridge::toCvShare(msg, "16UC1")->image;
 
-    distanceThreshold(msg,depth);
-
+    distanceThreshold(msg,depth, normalized);
     if (!depth.empty())
     {
         printPixels(msg, depth, raw);
-        cv::namedWindow("Depth", CV_WINDOW_NORMAL);
+        // cv::namedWindow("Normalized", CV_WINDOW_NORMAL);
         image_name << "depth_" << msg->header.stamp;
-        cv::imshow("Depth", depth);
-        cv::waitKey(1);
-        saveImage(depth, image_name.str());
+        // cv::imshow("Normalized", normalized);
+        // cv::imshow("Normalized", depth);
+        // cv::waitKey(1);
+        saveImage(depth, normalized, image_name.str());
     }
 }
 
-bool ZedDepthAcquisition::saveImage(cv::Mat& src, const std::string file_name)
+bool ZedDepthAcquisition::saveImage(cv::Mat& depth, cv::Mat& normalized, const std::string file_name)
 {
-    std::ostringstream path;
-
+    std::ostringstream depth_path;
+    std::ostringstream normalized_path;
+    
     if (files_path_[0] == '~')
     {
         files_path_ = file_manager_.normalizeUserPath(files_path_);
     }
 
-    path << files_path_ << "/depth/";
+    depth_path << files_path_ << "/depth/";
+    normalized_path << files_path_ << "/normalized/";
     
-    if ( !file_manager_.existsDir(path.str()) )
+    if ( !file_manager_.existsDir(depth_path.str()) )
     {
-        file_manager_.createDir(path.str());
+        file_manager_.createDir(depth_path.str());
     }
-    path << file_name << ".png";
-    cv::imwrite(path.str(), src);
+
+    if ( !file_manager_.existsDir(normalized_path.str()) )
+    {
+        file_manager_.createDir(normalized_path.str());
+    }
+    depth_path << file_name << ".png";
+    normalized_path << file_name << ".png";
+    cv::imwrite(normalized_path.str(), normalized);
+    cv::imwrite(depth_path.str(), depth);
 }
 
 void ZedDepthAcquisition::printPixels(const sensor_msgs::ImageConstPtr& msg, const cv::Mat& depth, const cv::Mat& raw)
